@@ -87,7 +87,7 @@ impl Jira {
 
         let result = match response {
             Ok(result) => result,
-            Err(Error::Status(code, response)) => {
+            Err(Error::Status(_code, response)) => {
                 panic!("{} {:?}", response.into_string().unwrap(), data)
             }
             _ => panic!("Request failed"),
