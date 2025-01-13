@@ -1,0 +1,19 @@
+[package]
+name = "jiratrack"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.95"
+base64 = "0.22.1"
+color-eyre = "0.6.3"
+crossterm = "0.28.1"
+fuzzy-matcher = "0.3.7"
+ratatui = "0.29.0"
+reqwest = "0.12.12"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.135"
+tokio = "1.43.0"
+ureq = { version = "2.12.1", features=["json"] }
+jiff = { version = "0.1.0", features = ["serde"] }
+dirs = "6.0.0"
