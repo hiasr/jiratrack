@@ -2,6 +2,10 @@
 name = "jiratrack"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "TUI to easily track time spent on Jira issues"
+homepage = "https://github.com/hiasr/jiratrack"
+repository = "https://github.com/hiasr/jiratrack"
 
 [dependencies]
 anyhow = "1.0.95"
