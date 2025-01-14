@@ -1,14 +1,39 @@
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine as _};
 use jiff::{Unit, Zoned};
+use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, fs};
 
 use ureq::{json, Error, Response};
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Config {
+    atlassian_url: String,
+    user_email: String,
+    user_api_token: String,
+}
+
+impl Config {
+    fn from_config_file() -> Result<Config> {
+        let path = dirs::home_dir()
+            .unwrap()
+            .join(".config/jiratrack/config.toml");
+        assert!(
+            fs::exists(&path).unwrap(),
+            "Config file not found. Ensure your config file is in ~/.config/jiratrack/config.toml"
+        );
+        let config = fs::read_to_string(&path)?;
+        let config = toml::from_str::<Config>(&config)?;
+        Ok(config)
+    }
+}
+
 #[derive(Debug)]
 pub struct Jira {
-    api_key: String,
+    atlassian_url: String,
+    user_email: String,
+    user_api_token: String,
 }
 
 #[derive(Debug, Clone)]
@@ -27,8 +52,12 @@ fn create_basic_auth_header(user: &str, password: &str) -> String {
 
 impl Jira {
     pub fn new() -> Self {
-        let api_key = env::var("JIRA_API_TOKEN").unwrap();
-        Jira { api_key }
+        let config = Config::from_config_file().unwrap();
+        Jira {
+            atlassian_url: config.atlassian_url,
+            user_email: config.user_email,
+            user_api_token: config.user_api_token,
+        }
     }
 
     fn get_request(
@@ -36,9 +65,9 @@ impl Jira {
         endpoint: &str,
         params: Option<HashMap<String, String>>,
     ) -> Result<Response> {
-        let url = format!("https://techwolf.atlassian.net{endpoint}");
+        let url = format!("{}{endpoint}", &self.atlassian_url);
 
-        let auth_header = create_basic_auth_header("ruben.hias@techwolf.ai", &self.api_key);
+        let auth_header = create_basic_auth_header(&self.user_email, &self.user_api_token);
         let agent = ureq::AgentBuilder::new()
             .redirect_auth_headers(ureq::RedirectAuthHeaders::SameHost)
             .build();
@@ -63,9 +92,9 @@ impl Jira {
         params: Option<HashMap<String, String>>,
         data: Option<Value>,
     ) -> Result<Response> {
-        let url = format!("https://techwolf.atlassian.net{endpoint}");
+        let url = format!("{}{endpoint}", &self.atlassian_url);
 
-        let auth_header = create_basic_auth_header("ruben.hias@techwolf.ai", &self.api_key);
+        let auth_header = create_basic_auth_header("ruben.hias@techwolf.ai", &self.user_api_token);
         let agent = ureq::AgentBuilder::new()
             .redirect_auth_headers(ureq::RedirectAuthHeaders::SameHost)
             .build();
@@ -97,7 +126,9 @@ impl Jira {
     }
 
     pub fn get_issue(&self, key: &str) -> Result<Issue> {
-        let body = self.get_request(&format!("/rest/api/3/issue/{key}"), None)?.into_json()?;
+        let body = self
+            .get_request(&format!("/rest/api/3/issue/{key}"), None)?
+            .into_json()?;
         Ok(self.parse_issue(&body))
     }
 
@@ -119,8 +150,7 @@ impl Jira {
     }
 
     pub fn assign_to_current_user(&self, issue_key: &str) -> Result<()> {
-        let account_id = "cbbb4845-3ccb-42e3-95bb-c3a15a743cf5";
-        // let account_id = "-1";
+        let account_id = "-1";
         let data = json!({"accountId": account_id});
         let endpoint = format!("/rest/api/3/issue/{issue_key}/assignee");
         self.post_request(&endpoint, None, Some(data))?;

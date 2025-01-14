@@ -1,6 +1,6 @@
 [package]
 name = "jiratrack"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 license = "MIT"
 description = "TUI to easily track time spent on Jira issues"
@@ -21,3 +21,4 @@ tokio = "1.43.0"
 ureq = { version = "2.12.1", features=["json"] }
 jiff = { version = "0.1.0", features = ["serde"] }
 dirs = "6.0.0"
+toml = "0.8.19"
