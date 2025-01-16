@@ -4,6 +4,7 @@ use std::{
 };
 
 use anyhow::Result;
+use arboard::Clipboard;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers};
 use dirs::home_dir;
 use fuzzy_matcher::clangd::fuzzy_match;
@@ -19,6 +20,7 @@ use ratatui::{
 };
 use serde::{Deserialize, Serialize};
 pub mod jira;
+pub mod config;
 
 fn main() -> Result<()> {
     let mut terminal = ratatui::init();
@@ -104,6 +106,7 @@ impl App {
             match key_event.code {
                 KeyCode::Char('s') => self.deactivate_issue(),
                 KeyCode::Char('d') => self.clear_state(),
+                KeyCode::Char('y') => self.copy_mr_title(),
                 _ => ()
             }
             return
@@ -145,6 +148,17 @@ impl App {
         self.persist_state();
     }
 
+    fn copy_mr_title(&self) {
+        let issue = self.get_active_issue();
+
+        if let Some(issue) = issue {
+        let issue_string = format!("[{}] {}", issue.key, issue.summary);
+
+        let mut clipboard = Clipboard::new().unwrap();
+        clipboard.set_text(issue_string).unwrap();
+        }
+    }
+
     fn add_char(&mut self, new_char: char) {
         self.search_input.push(new_char)
     }
@@ -163,11 +177,13 @@ impl App {
         let title = Line::from(" Jiratrack ".bold());
         let instructions = Line::from(vec![
             " Activate Issue ".into(),
-            "<Enter>".blue().bold(),
+            "<Enter>  ".blue().bold(),
             " Submit Worklog ".into(),
-            "<C-s>".blue().bold(),
+            "<C-s>  ".blue().bold(),
             " Cancel Worklog ".into(),
-            "<C-d>".blue().bold(),
+            "<C-d>  ".blue().bold(),
+            " Copy Active MR Title ".into(),
+            "<C-y>  ".blue().bold(),
             " Quit ".into(),
             "<esc> ".blue().bold(),
         ]);

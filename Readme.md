@@ -14,6 +14,7 @@ Below you can find an example configuration file, all the options are required.
 atlassian_url = "https://company.atlassian.net"
 user_email = "john.doe@company.com"
 user_api_token = "123456789abc"
+project = "IMG" # This is the prefix of all your issues e.g IMG-123
 ```
 
 You can find your API token [here](https://id.atlassian.com/manage-profile/security/api-tokens).

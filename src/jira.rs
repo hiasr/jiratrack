@@ -1,39 +1,20 @@
 use anyhow::Result;
 use base64::{engine::general_purpose, Engine as _};
 use jiff::{Unit, Zoned};
-use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use std::{collections::HashMap, fs};
+use std::collections::HashMap;
 
 use ureq::{json, Error, Response};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Config {
-    atlassian_url: String,
-    user_email: String,
-    user_api_token: String,
-}
+use crate::config::Config;
 
-impl Config {
-    fn from_config_file() -> Result<Config> {
-        let path = dirs::home_dir()
-            .unwrap()
-            .join(".config/jiratrack/config.toml");
-        assert!(
-            fs::exists(&path).unwrap(),
-            "Config file not found. Ensure your config file is in ~/.config/jiratrack/config.toml"
-        );
-        let config = fs::read_to_string(&path)?;
-        let config = toml::from_str::<Config>(&config)?;
-        Ok(config)
-    }
-}
 
 #[derive(Debug)]
 pub struct Jira {
     atlassian_url: String,
     user_email: String,
     user_api_token: String,
+    project: String
 }
 
 #[derive(Debug, Clone)]
@@ -57,6 +38,7 @@ impl Jira {
             atlassian_url: config.atlassian_url,
             user_email: config.user_email,
             user_api_token: config.user_api_token,
+            project: config.project,
         }
     }
 
@@ -195,8 +177,8 @@ impl Jira {
     }
 
     pub fn get_current_sprint_issues(&self) -> Result<Vec<Issue>> {
-        let jql = "sprint in openSprints() AND project = \"IMG\" AND status != done AND status != archived";
-        let issues = self.get_issues_jql(jql)?;
+        let jql = format!("sprint in openSprints() AND project = \"{}\" AND status != done AND status != archived", self.project);
+        let issues = self.get_issues_jql(&jql)?;
         Ok(issues)
     }
 }
