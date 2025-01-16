@@ -76,7 +76,7 @@ impl Jira {
     ) -> Result<Response> {
         let url = format!("{}{endpoint}", &self.atlassian_url);
 
-        let auth_header = create_basic_auth_header("ruben.hias@techwolf.ai", &self.user_api_token);
+        let auth_header = create_basic_auth_header(&self.user_email, &self.user_api_token);
         let agent = ureq::AgentBuilder::new()
             .redirect_auth_headers(ureq::RedirectAuthHeaders::SameHost)
             .build();
@@ -197,7 +197,8 @@ mod test {
     #[test]
     fn test_get_issue() {
         let api = Jira::new();
-        if let Ok(issue) = api.get_issue("IMG-234") {
+        let issue_key = format!("{}-1", api.project);
+        if let Ok(issue) = api.get_issue(&issue_key) {
             println!("{:?}", issue)
         }
     }
@@ -213,21 +214,18 @@ mod test {
     #[test]
     fn log_time() {
         let api = Jira::new();
+
+        let issue_key = format!("{}-1", api.project);
         let started_on = &Zoned::now() - 10.minutes();
         let ended_on = Zoned::now();
-        api.log_time("IMG-237", &started_on, &ended_on).unwrap()
+
+        api.log_time(&issue_key, &started_on, &ended_on).unwrap()
     }
 
     #[test]
     fn test_assign() {
         let api = Jira::new();
-        api.assign_to_current_user("IMG-266").unwrap()
-    }
-
-    #[test]
-    fn test_ureq() {
-        let url = "http://techwolf.atlassian.net/rest/api/2/issue/IMG-234";
-        let body = ureq::get(url).call().unwrap().into_string().unwrap();
-        println!("{}", body)
+        let issue_key = format!("{}-1", api.project);
+        api.assign_to_current_user(&issue_key).unwrap()
     }
 }
