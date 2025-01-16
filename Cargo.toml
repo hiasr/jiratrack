@@ -1,6 +1,6 @@
 [package]
 name = "jiratrack"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2021"
 license = "MIT"
 description = "TUI to easily track time spent on Jira issues"
